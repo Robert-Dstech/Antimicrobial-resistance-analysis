@@ -1,0 +1,1150 @@
+---
+title: "Amr data analysis"
+output: html_document
+date: "2023-07-12"
+---
+
+```{r,include=FALSE}
+library(tidyverse)
+library(readxl)
+library(janitor)
+library(AMR)
+library(kableExtra)
+library(lubridate)
+
+# kakamega <- read_excel("Edited kakamega.xlsx") %>%
+#   mutate(county = "Kakamega") %>%
+#   rename("Site" = "Site in charge") %>%select(1:95)%>%mutate_at(vars(1:95), as.character)
+#  
+# kitale<- read_excel("edited_kitale.xlsx")%>%select(1:94) %>% mutate(county="Kitale") %>% rename( "Site"="Site in charge")%>%
+#   mutate_at(vars(1:94), as.character) 
+# kitale$`SPECIMEN COLLECTION DATE`<-  as.Date(kitale$`SPECIMEN COLLECTION DATE`, "%d/%m/%Y")
+# Machakos <- read_excel("edited_machakos.xlsx") %>% select(1:94) %>% mutate(county="Machakos") %>% rename("Site"="Site in charge")%>%
+#   mutate_at(vars(1:94), as.character) 
+# Makueni<- read_excel("edited_makueni.xlsx")%>%mutate(county="Makueni") %>% rename("Site"="Site in charge")%>%select(1:94)%>%mutate_at(vars(1:94), as.character)
+# Malindi <- read_excel("edited_malindi.xlsx")%>%select(1:94) %>% mutate(county="Malindi") %>% rename("Site"="Site in charge")%>%mutate_at(vars(1:94), as.character)%>%mutate_at(vars(1:94), as.character)
+# Bungoma<-read_excel("edited Bungoma.xlsx")%>%select(1:94) %>% mutate(county="Bungoma") %>% rename("Site"="Site in charge")%>%mutate_at(vars(1:94), as.character)
+# 
+# kk1<-full_join(kakamega,kitale)
+# kk2<-full_join(Machakos,Makueni)
+# kk3<-full_join(Malindi,Bungoma)
+# merged_amr<-full_join(kk1,kk2)
+# merged_amr2<-full_join(merged_amr,kk3)%>%clean_names()
+# 
+# # cleaning organism isolated and site columns
+# M6 <- merged_amr2   %>%
+#   mutate(organism_isolated = ifelse(organism_isolated%in%c("No growth obtained", "No Growth", "No Growth Obtained", "No Pathogen Isolated", "No significant growth found","No growth","No organism Isolated"), "No growth obtained",ifelse(organism_isolated %in% c("XXX","xxx","xep","xsg"),"Unknown", organism_isolated))) 
+# 
+# 
+# 
+# # Recode organisms isolated
+# M6 <- M6 %>% mutate(organism_isolated=recode(organism_isolated, "Klebsiella pneumoniae"="Klebsiella spp", "Pseudomonas aeruginosa"="Pseudomonas aeruginosa","Pseudomona aeruginosa"="Pseudomonas aeruginosa","Acinetobacter baumannii"="Acinetobacter spp","Acinetobacter baumannii complex"="Acinetobacter spp","Acinetobacter Species"="Acinetobacter spp","Acinetobacter spp."="Acinetobacter spp","Acinetobacter baumanii"="Acinetobacter spp","sau"= "Staphylococcus aureus","Staphylococcus aureas"="Staphylococcus aureus","Staphylococcus species"="Staphylococus aureus","Staphylocoocus aureus"="Staphylococcus aureus","Str.pneumoniae"="Streptococcus pneumoniae","eco"="Escherichia coli","Acinetobacter sp."="Acinetobacter spp","Klebsiella sp."="Klebsiella spp","Klebsiella pneumoniae Species"="Klebsiella spp","Klebsiella Species"="Klebsiella spp","Klebsiella species"="Klebsiella spp","Klebsiella pneumoae"="Klebsiella spp", "Acinetobacter baumani"="Acinetobacter spp", "Escherichia coli Species"="Escherichia coli","Escherichia Coli"="Escherichia coli","ESCHERICHIA COLI"="Escherichia coli","K.oxytoca"="Klebsiella spp","K.pneum.ozaenae"="Klebsiella spp","Klebsiella"="Klebsiella spp","Klebsiella oxytica"="Klebsiella spp","Klebsiella pneumoniae ssp pneumoniae"="Klebsiella spp","Klebsiella Species pneuomoniae"="Klebsiella spp","Klebsiella Species spp."="Klebsiella spp","Klebsiella spp."="Klebsiella spp","Klensiella pneumoniae"="Klebsiella spp","Klebsiella oxytoca"="Klebsiella spp","Salm.enter.enterica"="Salmonella sp","Salmonella sp."="Salmonella sp","Salmonella species"="Salmonella sp","Salmonella spp"="Salmonella sp","Salm.Enteritidis"="Salmonella sp","sal"="Salmonella sp","Salm.ent.diarizonae"="Salmonella sp","Salmonella group"="Salmonella sp","Salmonella Species"="Salmonella sp","Salmonella typhi"="Salmonella sp","Salmonella typhimurium"="Salmonella sp","Shigella spp"="Shigella sp","Shigella flexineri"="Shigella sp","Shigella group"="Shigella sp","Shigella species"="Shigella sp"))
+# 
+# 
+# write.csv(M6,"AMRCLEAN.csv")
+# 
+# 
+# 
+
+## Kakamega
+amr1a<-kakamega%>%
+  select(-contains("Zone")) %>%
+  pivot_longer(contains('Interpretation'), names_to="Antimicrobial", values_to = "AST_interpretation",values_drop_na = TRUE)%>%
+
+mutate(Antimicrobial=str_remove(Antimicrobial,"interpretation")) %>%
+  mutate(Antimicrobial=str_remove(Antimicrobial,"Interpretation")) %>%
+mutate(Antimicrobial=str_replace(Antimicrobial,"[.]", ""))%>%
+  mutate(Antimicrobial=str_replace(Antimicrobial,"[4]", "")) %>%
+  mutate(Antimicrobial=str_replace(Antimicrobial,"[1]", "")) %>%
+  mutate(Antimicrobial=str_replace(Antimicrobial,"[.]", "")) %>%
+  mutate(Antimicrobial=str_replace(Antimicrobial,"[.]", "")) %>%
+  mutate(Antimicrobial=str_replace(Antimicrobial,"[7]", "")) %>%
+  mutate(Antimicrobial=str_replace(Antimicrobial,"[5]", "")) %>%
+    mutate(Antimicrobial=str_replace(Antimicrobial,"[9]", "")) %>%
+  mutate(Antimicrobial=str_replace(Antimicrobial,"[2]", "")) %>%
+  mutate(Antimicrobial=str_replace(Antimicrobial,"[3]", ""))%>%
+  mutate(Antimicrobial=str_replace(Antimicrobial,"[8]", ""))%>%
+  mutate(Antimicrobial=str_replace(Antimicrobial,"[6]", ""))%>%
+  mutate(Antimicrobial=trimws(Antimicrobial))%>%
+  clean_names()
+
+      
+
+amr_sltd_kakmega <- amr1a %>%
+  select(ward, specimen_type_code) %>%
+  mutate(
+    ward = recode(
+      ward,
+      "BURNS UNIT" = "Inpatient",
+      "GYNAECOLOGY " = "Inpatient",
+      "GYNECOLOGY WARD" = "Inpatient",
+      "NEWBORN UNIT" = "Inpatient",
+      "ORTHOPAEDICS WARD " = "Inpatient",
+      "ORTHOPAEDICS WARD" = "Inpatient",
+      "GYNAECOLOGY" = "Inpatient"
+    )
+  ) %>%
+  mutate(ward = ifelse(is.na(ward), "Inpatient", ward))%>% 
+
+  group_by(ward, specimen_type_code) %>%
+  dplyr::summarise(freq = n()) %>%
+  ungroup() %>%
+  mutate(county="Kakamega")
+
+## Kitale
+amr_Kitale <- kitale%>%
+  select(-contains("Zone")) %>%
+  pivot_longer(contains('Interpretation'), names_to="Antimicrobial", values_to = "AST_interpretation",values_drop_na = TRUE)%>%
+
+mutate(Antimicrobial=str_remove(Antimicrobial,"interpretation")) %>%
+  mutate(Antimicrobial=str_remove(Antimicrobial,"Interpretation")) %>%
+mutate(Antimicrobial=str_replace(Antimicrobial,"[.]", ""))%>%
+  mutate(Antimicrobial=str_replace(Antimicrobial,"[4]", "")) %>%
+  mutate(Antimicrobial=str_replace(Antimicrobial,"[1]", "")) %>%
+  mutate(Antimicrobial=str_replace(Antimicrobial,"[.]", "")) %>%
+  mutate(Antimicrobial=str_replace(Antimicrobial,"[.]", "")) %>%
+  mutate(Antimicrobial=str_replace(Antimicrobial,"[7]", "")) %>%
+  mutate(Antimicrobial=str_replace(Antimicrobial,"[5]", "")) %>%
+    mutate(Antimicrobial=str_replace(Antimicrobial,"[9]", "")) %>%
+  mutate(Antimicrobial=str_replace(Antimicrobial,"[2]", "")) %>%
+  mutate(Antimicrobial=str_replace(Antimicrobial,"[3]", ""))%>%
+  mutate(Antimicrobial=str_replace(Antimicrobial,"[8]", ""))%>%
+  mutate(Antimicrobial=str_replace(Antimicrobial,"[6]", ""))%>%
+  mutate(Antimicrobial=trimws(Antimicrobial))%>%
+  clean_names()
+
+amr_sltd_kitale<-amr_Kitale %>%
+  select(ward, specimen_type_code) %>%
+  mutate(
+    ward = recode(
+      ward,
+      "AMPATH" = "Outpatient",
+      "MATERNITY" = "Inpatient",
+      "OPD" = "Outpatient",
+      "OPD" = "Outpatient",
+      " WARD1 " = "Inpatient",
+      "WARD2-3 " = "Inpatient",
+      "WARD4-5" = "Inpatient",
+      "WARD6" = "Inpatient",
+      " WARD8 " = "Inpatient",
+      "WARD2-3"="Inpatient",
+      "WARD7"="Inpatient",
+      "WARD8"="Inpatient",
+      "WARD"="Inpatient",
+      "WARD1"="Inpatient"
+    
+    )
+  ) %>%
+  mutate(
+    specimen_type_code = recode(
+      specimen_type_code,
+      "ISO_WOUND" = "Swabs",
+      "SWAB_NASOP" = "Swabs",
+      "RECTAL SWAB"="Swabs",
+      "WOUND SWAB"="Swabs",
+      "HVS"="Swabs",
+      "PUS_SWAB"="Swabs",
+      "SWAB"="Swabs",
+      "SWAB_EAR"="Swabs",
+      "SWAB_GROIN"="Swabs",
+      "ASCITIC"="Fluids",
+      "FLUID"="Fluids",
+      "CSF"="Fluids",
+      "ABSCESS"="Abscess",
+      "PUS"="Pus",
+      "SPUTUM"="Sputum",
+      "URINE"="Urine",
+      "SKIN_SCRAP"="Skin scrap",
+      "STOOL"="Stool",
+      "BLOOD"="Blood"
+      
+      
+    )
+  )%>%
+ 
+  group_by(ward, specimen_type_code) %>%
+  dplyr::summarise(freq = n()) %>%
+  ungroup() %>%
+  filter(!is.na(ward)) %>%
+  mutate(county="Kitale")
+
+
+amr_data <- rbind(amr_sltd_kakmega, amr_sltd_kitale,amr_machakos_sltd,amr_malindi_sltd,amr_makueni_sltd,amr_bungoma_sltd)
+write_csv(amr_data,"/Users/student/Desktop/R_folders/amr_merged.csv")
+
+```
+## Kakamega
+```{r,echo=FALSE}
+ggplot(amr_sltd_kakmega, aes(x = reorder(specimen_type_code,freq), y = freq,fill=ward)) +
+  geom_col( ) +  
+  labs(x = "Specimen", y = "Frequency", fill="") +
+  coord_flip()+
+  theme_minimal() +  
+  theme(axis.text.x = element_text( hjust = 1, vjust = 0.5), 
+        axis.title = element_text(size = 12, face = "bold"),  
+        axis.text = element_text(size = 10)) +
+  scale_fill_manual(values=c( "#377eb8", "#4daf4a"))+
+  scale_y_continuous(labels = scales::comma)
+```
+
+```{r,echo=FALSE}
+amr_data[amr_data$county%in%"Kakamega",]%>%
+ pivot_wider(id_cols = specimen_type_code, names_from = "ward", values_from = "freq") %>%
+ rename(`Specimen Type` = specimen_type_code) %>%
+  group_by(`Specimen Type`) %>%
+  mutate(Total=sum(Inpatient, na.rm=T)) %>%
+  ungroup() %>%
+  
+  select(`Specimen Type`, Total, Inpatient)%>%
+  kableExtra::kable()
+```
+#### Didn't have enough isolates for an antibiogram
+
+## Kitale
+
+```{r,echo=FALSE}
+ggplot(amr_data[amr_data$county%in%"Kitale",], aes(x = reorder(specimen_type_code,freq), y = freq,fill=ward)) +
+  geom_col( ) +  
+  labs(x = "Specimen", y = "Frequency", fill="") +
+  coord_flip()+
+  theme_minimal() +  
+  theme(axis.text.x = element_text( hjust = 1, vjust = 0.5), 
+        axis.title = element_text(size = 12, face = "bold"),  
+        axis.text = element_text(size = 10)) +
+  scale_fill_manual(values=c( "#377eb8", "#4daf4a"))+
+  scale_y_continuous(labels = scales::comma)
+```
+
+```{r,echo=FALSE}
+amr_sltd_kitale%>%
+  pivot_wider(id_cols = specimen_type_code, names_from = "ward", values_from = "freq") %>%
+  rename(`Specimen Type` = specimen_type_code) %>%
+  group_by(`Specimen Type`) %>%
+  mutate(Total=sum(Inpatient, Outpatient, na.rm=T)) %>%
+  ungroup() %>%
+  
+  select(`Specimen Type`, Total, Inpatient, Outpatient)%>%
+  kableExtra::kable()
+```
+#### Didn't have enough isolates for an antibiogram
+```{r,include=FALSE}
+amr_Machakos <- Machakos%>%
+  select(-contains("Zone")) %>%
+  pivot_longer(contains('Interpretation'), names_to="Antimicrobial", values_to = "AST_interpretation",values_drop_na = TRUE)%>%
+
+mutate(Antimicrobial=str_remove(Antimicrobial,"interpretation")) %>%
+  mutate(Antimicrobial=str_remove(Antimicrobial,"Interpretation")) %>%
+mutate(Antimicrobial=str_replace(Antimicrobial,"[.]", ""))%>%
+  mutate(Antimicrobial=str_replace(Antimicrobial,"[4]", "")) %>%
+  mutate(Antimicrobial=str_replace(Antimicrobial,"[1]", "")) %>%
+  mutate(Antimicrobial=str_replace(Antimicrobial,"[.]", "")) %>%
+  mutate(Antimicrobial=str_replace(Antimicrobial,"[.]", "")) %>%
+  mutate(Antimicrobial=str_replace(Antimicrobial,"[7]", "")) %>%
+  mutate(Antimicrobial=str_replace(Antimicrobial,"[5]", "")) %>%
+    mutate(Antimicrobial=str_replace(Antimicrobial,"[9]", "")) %>%
+  mutate(Antimicrobial=str_replace(Antimicrobial,"[2]", "")) %>%
+  mutate(Antimicrobial=str_replace(Antimicrobial,"[3]", ""))%>%
+  mutate(Antimicrobial=str_replace(Antimicrobial,"[8]", ""))%>%
+  mutate(Antimicrobial=str_replace(Antimicrobial,"[6]", ""))%>%
+  mutate(Antimicrobial=trimws(Antimicrobial))%>%
+  clean_names()
+  amr_machakos_sltd<-amr_Machakos%>%select(ward, specimen_type_code) %>%
+  mutate(
+    ward = recode(
+      ward,
+      "ANTENATAL" = "Outpatient",
+      "CASUALTY" = "Outpatient",
+      "EYE_ENT" = "Outpatient",
+      "GYNAE" = "Outpatient",
+      "GENERAL" = "Outpatient",
+      "ICU " = "Critical care",
+      "IS_ICU" = "Critical care",
+      "MCH " = "Outpatient",
+      "NBU" = "Inpatient",
+      "ORTHOPEDIC" = "Inpatient",
+      "OUTPATIENT" = "Outpatient",
+      "PEDIATRIC" = "Inpatient",
+      "RENAL_UNIT" = "Inpatient",
+      "SURGICAL" = "Inpatient",
+      "WARD_2 " = "Inpatient",
+      "WARD_3" = "Inpatient",
+      "WARD_4" = "Inpatient",
+      "WARD_5" = "Inpatient",
+      "WARD_6" = "Inpatient",
+      "WARD_7" = "Inpatient",
+      "WARD_8" = "Inpatient",
+      "WARD10" = "Inpatient",
+      "WARD12" = "Inpatient",
+      "WARD13" = "Inpatient",
+      "WARD14" = "Inpatient",
+      "WARD1A" = "Inpatient",
+      "WARD1B" = "Inpatient",
+      "WARD_2"="Inpatient",
+      "ICU"="Critical care",
+      "MCH"="Outpatient",
+      "MEDICAL"="Inpatient"
+      
+      
+      
+    )
+  ) %>%filter(!is.na(ward))%>%
+  mutate(
+    specimen_type_code = recode(
+      specimen_type_code,
+      "BLOOD_WHL" = "Blood",
+      "DEEP WOUND SWAB" = "Swabs",
+      "WOUND SWAB" = "Swabs",
+      "Urethral Swab" = "Swabs",
+      "SWAB"="Swabs",
+      "SWAB_RECTM"="Swabs",
+      "ENDOCERVICAL SWAB"="Swabs",
+      "EYE_SWAB"="Swabs",
+      "EAR_SWAB"="Swabs",
+      "SWAB_URETH"="Swabs",
+      "SWAB_ENDO"="Swabs",
+      "BRONCH_ASP"="Aspirates",
+      "PUS_ASPIRA"="Aspirates",
+      "TRACHAEL_A"="Aspirates",
+      "TRAECHAL ASPIRATE"="Aspirates",
+      "PUS_SWAB"="Swabs",
+      "EAR SWAB"="Swabs",
+      "HVS"="Swabs",
+      "GASTRIC_AS"="Aspirates",
+      "EAR SWAB"="Swabs",
+      "EYE SWAB"="Swabs",
+      "ASCITIC_F"="Fluids",
+      "JOINT_FL"="Fluids",
+      "PERITO_FL"="Fluids",
+      "SYNOVIAL"="Fluids",
+      "TRACH_FL"="Fluids",
+      "CSF"="Fluids",
+      "BLOOD"="Blood",
+      "NASAL_ASP"="Aspirates",
+      "WOUND_SWAB"="Swabs",
+      "WOUND_DEEP"="Swabs",
+      "MUCOCUTENO"="Swabs",
+      "WOUND_SUP"="Swabs",
+      "PLF"="Fluids",
+      "ASPIRATE"="Aspirates",
+      "FLUID"="Fluids",
+      "SPUTUM"="Sputum",
+      "STOOL"="Stool",
+      "TISSUE"="Tissue",
+      "URINE"="Urine",
+      "ABSCESS"="Abscess",
+      "SERUM"="Serum",
+      "PUS"="Pus"
+      
+   )
+ ) %>%filter(!is.na(specimen_type_code))%>%
+  group_by(ward, specimen_type_code)%>%
+  dplyr::summarise(freq = n()) %>%
+  mutate(county="Machakos")
+  #ungroup()
+```
+## Machakos
+
+```{r,echo=FALSE}
+#ggplot(amr_data[amr_data$county%in%"machakos",], aes(x = reorder(specimen_type_code,freq), y = freq,fill=ward)) +
+ggplot( amr_machakos_sltd, aes(x = reorder(specimen_type_code,freq), y = freq,fill=ward))
+  geom_col( ) +  
+  labs(x = "Specimen", y = "Frequency", fill="") +
+  coord_flip()+
+  theme_minimal() +  
+  theme(axis.text.x = element_text(hjust = 1, vjust = 0.5), 
+        axis.title = element_text(size = 12, face = "bold"),  
+        axis.text = element_text(size = 10)) +
+  scale_fill_manual(values=c("#e41a1c", "#377eb8", "#4daf4a")) +
+  scale_y_continuous(labels = scales::comma)
+```
+
+```{r,echo=FALSE}
+#amr_data[amr_data$county%in%"machakos",]%>%
+ amr_machakos_sltd%>%
+  pivot_wider(id_cols = specimen_type_code, names_from = "ward", values_from = "freq") %>%
+  rename(`Specimen Type` = specimen_type_code) %>%
+  group_by(`Specimen Type`) %>%
+  mutate(Total=sum(Inpatient, Outpatient,`Critical care`, na.rm=T)) %>%
+  ungroup() %>%
+  
+  select(`Specimen Type`, Total, Inpatient, Outpatient,`Critical care`)%>%
+  kableExtra::kable()
+```
+```{r,include=FALSE}
+library(AMR)
+antib_machakos<-amr_Machakos %>%
+  select(date_submitted_to_cdw, laboratory_id, ward,specimen_type_code, diagnosis_clinical_note, gender_m_f, age, organism_isolated, antimicrobial, ast_interpretation)%>% 
+  mutate(ast_interpretation =recode(ast_interpretation, 
+                
+                                            "Sensitive"="S",
+                                            "Intermediate"="I",
+                                            "Resistant"="R"))%>%
+  filter(ast_interpretation=="I"|ast_interpretation=="R"|ast_interpretation=="S")%>%
+  rename(patient_id = laboratory_id)%>%pivot_wider(names_from = antimicrobial, values_from = ast_interpretation)%>%
+  mutate(
+    ward = recode(
+      ward,
+      "ANTENATAL" = "Outpatient",
+      "CASUALTY" = "Outpatient",
+      "EYE_ENT" = "Outpatient",
+      "GYNAE" = "Outpatient",
+      "GENERAL" = "Outpatient",
+      "ICU " = "Critical care",
+      "IS_ICU" = "Critical care",
+      "MCH " = "Outpatient",
+      "NBU" = "Inpatient",
+      "ORTHOPEDIC" = "Inpatient",
+      "OUTPATIENT" = "Outpatient",
+      "PEDIATRIC" = "Inpatient",
+      "RENAL_UNIT" = "Inpatient",
+      "SURGICAL" = "Inpatient",
+      "WARD_2 " = "Inpatient",
+      "WARD_3" = "Inpatient",
+      "WARD_4" = "Inpatient",
+      "WARD_5" = "Inpatient",
+      "WARD_6" = "Inpatient",
+      "WARD_7" = "Inpatient",
+      "WARD_8" = "Inpatient",
+      "WARD10" = "Inpatient",
+      "WARD12" = "Inpatient",
+      "WARD13" = "Inpatient",
+      "WARD14" = "Inpatient",
+      "WARD1A" = "Inpatient",
+      "WARD1B" = "Inpatient",
+      "WARD_2"="Inpatient",
+      "ICU"="Critical care",
+      "MCH"="Outpatient",
+      "MEDICAL"="Inpatient"
+      
+      
+      
+    )
+  ) %>%mutate(
+    specimen_type_code = recode(
+      specimen_type_code,
+      "BLOOD_WHL" = "Blood",
+      "DEEP WOUND SWAB" = "Swabs",
+      "WOUND SWAB" = "Swabs",
+      "Urethral Swab" = "Swabs",
+      "SWAB"="Swabs",
+      "SWAB_RECTM"="Swabs",
+      "ENDOCERVICAL SWAB"="Swabs",
+      "EYE_SWAB"="Swabs",
+      "EAR_SWAB"="Swabs",
+      "SWAB_URETH"="Swabs",
+      "SWAB_ENDO"="Swabs",
+      "BRONCH_ASP"="Aspirates",
+      "PUS_ASPIRA"="Aspirates",
+      "TRACHAEL_A"="Aspirates",
+      "TRAECHAL ASPIRATE"="Aspirates",
+      "PUS_SWAB"="Swabs",
+      "EAR SWAB"="Swabs",
+      "HVS"="Swabs",
+      "GASTRIC_AS"="Aspirates",
+      "EAR SWAB"="Swabs",
+      "EYE SWAB"="Swabs",
+      "ASCITIC_F"="Fluids",
+      "JOINT_FL"="Fluids",
+      "PERITO_FL"="Fluids",
+      "SYNOVIAL"="Fluids",
+      "TRACH_FL"="Fluids",
+      "CSF"="Fluids",
+      "BLOOD"="Blood",
+      "NASAL_ASP"="Aspirates",
+      "WOUND_SWAB"="Swabs",
+      "WOUND_DEEP"="Swabs",
+      "MUCOCUTENO"="Swabs",
+      "WOUND_SUP"="Swabs",
+      "PLF"="Fluids",
+      "ASPIRATE"="Aspirates",
+      "FLUID"="Fluids",
+      "SPUTUM"="Sputum",
+      "STOOL"="Stool",
+      "TISSUE"="Tissue",
+      "URINE"="Urine",
+      "ABSCESS"="Abscess",
+      "SERUM"="Serum",
+      "PUS"="Pus"
+      
+   )
+ )%>%
+  filter(!is.na(ward))%>%
+  mutate(gender_m_f=as.factor(gender_m_f))
+antib_machakos <- apply(antib_machakos,2,as.character)
+#write.csv(antib_machakos,"machakosclean.csv")
+
+#antib_machakos$organism_isolated <- as.mo(antib_machakos$organism_isolated, info = TRUE)
+antib_machakos<- antib_machakos %>%
+  mutate_at(vars(Levofloxacin:Penicillin), as.sir)
+glimpse(antib_machakos)
+antib_machakos$date_submitted_to_cdw <- as.Date(antib_machakos$date_submitted_to_cdw)
+
+antib_machakos2<- antib_machakos %>%
+  mutate(first = first_isolate(info = TRUE))
+antib_machakos2 %>%
+  count(mo_name(organism_isolated), sort = TRUE)
+Machakos_antibiogram<- antib_machakos2 %>%
+pivot_longer(c(Levofloxacin:Penicillin))%>%
+ filter(!is.na(value)) %>%
+   group_by(ward, organism_isolated, name, value,specimen_type_code)%>%
+   count()%>%
+   ungroup() %>%
+  group_by(ward, organism_isolated, name,specimen_type_code) %>%
+  mutate(total=sum(n)) %>%
+  ungroup() %>%
+   filter(total>29) %>%
+  mutate(susc=paste0(round(n/total*100), "%")) %>%
+  filter(value=="S") %>%
+  select(-n, -total, -value) %>%
+  pivot_wider(id_cols=c(ward,organism_isolated,specimen_type_code), names_from = name, values_from=susc)
+
+
+Machakos_antibiogram1<- antib_machakos2 %>%
+pivot_longer(c(Levofloxacin:Penicillin))%>%
+ filter(!is.na(value)) %>%
+   group_by(ward, organism_isolated, name, value,specimen_type_code)%>%
+   count()%>%
+   ungroup() %>%
+  group_by(ward, organism_isolated, name,specimen_type_code) %>%
+  mutate(total=sum(n)) %>%
+  ungroup() %>%
+   filter(total>29) %>%
+  mutate(susc=round(n/total*100)) %>%
+ # filter(value=="S") %>%
+  select(-n, -total) %>%
+  mutate(organism_isolated=recode(organism_isolated, "B_ESCHR_COLI"="Escherichia coli",
+                                  "B_STPHY_AURS"="Staphylococcus aureus"))
+```
+
+```{r, echo=F}
+
+#ggplot(Machakos_antibiogram1)+geom_col(aes(name,susc),fill="darkgreen")+facet_grid(ward~organism_isolated+specimen_type_code)+coord_flip()+theme_bw()+labs(x="Antibiotics", y="Proportion (%)")
+ggplot(Machakos_antibiogram1)+geom_col(aes(name,susc, fill=value))+facet_grid(ward~organism_isolated+specimen_type_code)+coord_flip()+theme_bw()+labs(x="Antibiotics", y="Proportion (%)", fill="")
+
+```
+
+```{r,echo=FALSE}
+knitr::kable(Machakos_antibiogram)
+```
+```{r,include=FALSE}
+amr_Makueni <-Makueni%>%
+  select(-contains("Zone")) %>%
+  pivot_longer(contains('Interpretation'), names_to="Antimicrobial", values_to = "AST_interpretation",values_drop_na = TRUE)%>%
+
+mutate(Antimicrobial=str_remove(Antimicrobial,"interpretation")) %>%
+  mutate(Antimicrobial=str_remove(Antimicrobial,"Interpretation")) %>%
+mutate(Antimicrobial=str_replace(Antimicrobial,"[.]", ""))%>%
+  mutate(Antimicrobial=str_replace(Antimicrobial,"[4]", "")) %>%
+  mutate(Antimicrobial=str_replace(Antimicrobial,"[1]", "")) %>%
+  mutate(Antimicrobial=str_replace(Antimicrobial,"[.]", "")) %>%
+  mutate(Antimicrobial=str_replace(Antimicrobial,"[.]", "")) %>%
+  mutate(Antimicrobial=str_replace(Antimicrobial,"[7]", "")) %>%
+  mutate(Antimicrobial=str_replace(Antimicrobial,"[5]", "")) %>%
+    mutate(Antimicrobial=str_replace(Antimicrobial,"[9]", "")) %>%
+  mutate(Antimicrobial=str_replace(Antimicrobial,"[2]", "")) %>%
+  mutate(Antimicrobial=str_replace(Antimicrobial,"[3]", ""))%>%
+  mutate(Antimicrobial=str_replace(Antimicrobial,"[8]", ""))%>%
+  mutate(Antimicrobial=str_replace(Antimicrobial,"[6]", ""))%>%
+  mutate(Antimicrobial=trimws(Antimicrobial))%>%
+  clean_names()
+  amr_makueni_sltd<-amr_Makueni%>%select(ward, specimen_type_code) %>%
+  mutate(
+    ward = recode(
+      ward,
+      "mch" = "Outpatient",
+      "med" = "Inpatient",
+      "opd" = "Outpatient",
+      "ped"="Inpatient",
+      "sur"="Inpatient"
+      
+     
+    )
+  ) %>%
+  mutate(
+    specimen_type_code = recode(
+      specimen_type_code,
+      "pus" = "Pus",
+      "ps" = "Pus",
+      "urin" = "urine",
+      "sp" = "sputum",
+      "ti"="tissue",
+      "tiss"="tissue",
+      "ur"="urine",
+      "st"=" stool",
+      "pleural fluid"="Fluids",
+      "peritonium flui"="Fluids",
+      "fl"="Fluids",
+      "ab"=NULL,
+      "as"=NULL,
+      "at"=NULL,
+      "bx"=NULL,
+      "sb"=NULL,
+      "pd"=NULL
+      
+    )
+  ) %>%filter(!is.na(specimen_type_code))%>%
+  group_by(ward, specimen_type_code) %>%
+  dplyr::summarise(freq = n()) %>%
+  ungroup() %>%
+  filter(!is.na(ward))%>%
+  mutate(county="Makueni")
+```
+## Makueni
+```{r,echo=FALSE}
+ggplot(amr_makueni_sltd, aes(x = reorder(specimen_type_code,freq), y = freq,fill=ward)) +
+  geom_col( ) +  
+  labs(x = "Specimen", y = "Frequency") +
+  coord_flip()+
+  theme_minimal() +  
+  theme(axis.text.x = element_text(hjust = 1, vjust = 0.5), 
+        axis.title = element_text(size = 12, face = "bold"),  
+        axis.text = element_text(size = 10)) + scale_fill_manual(values=c( "#377eb8", "#4daf4a"))+
+  scale_y_continuous(labels = scales::comma)
+```
+```{r,echo=FALSE}
+amr_makueni_sltd%>%
+  pivot_wider(id_cols = specimen_type_code, names_from = "ward", values_from = "freq") %>%
+  rename(`Specimen Type` = specimen_type_code) %>%
+  group_by(`Specimen Type`) %>%
+  mutate(Total=sum(Inpatient, Outpatient, na.rm=T)) %>%
+  ungroup() %>%
+  
+  select(`Specimen Type`, Total, Inpatient, Outpatient)%>%
+  kableExtra::kable()
+```
+#### Didn't have enough isolates for an antibiogram
+```{r,include=FALSE}
+Amr_Malindi <- Malindi %>%
+  select(-contains("Zone")) %>%
+  mutate(across(everything(), as.character)) %>%
+  pivot_longer(cols = contains('Interpretation'), names_to = "Antimicrobial", values_to = "AST_interpretation", values_drop_na = TRUE) %>%
+  mutate(Antimicrobial = str_remove(Antimicrobial, "interpretation")) %>%
+  mutate(Antimicrobial = str_remove(Antimicrobial, "Interpretation")) %>%
+  mutate(Antimicrobial = str_replace(Antimicrobial, "[.]", "")) %>%
+  mutate(Antimicrobial = str_replace(Antimicrobial, "[4]", "")) %>%
+  mutate(Antimicrobial = str_replace(Antimicrobial, "[1]", "")) %>%
+  mutate(Antimicrobial = str_replace(Antimicrobial, "[7]", "")) %>%
+  mutate(Antimicrobial = str_replace(Antimicrobial, "[5]", "")) %>%
+  mutate(Antimicrobial = str_replace(Antimicrobial, "[9]", "")) %>%
+  mutate(Antimicrobial = str_replace(Antimicrobial, "[2]", "")) %>%
+  mutate(Antimicrobial = str_replace(Antimicrobial, "[3]", "")) %>%
+  mutate(Antimicrobial = str_replace(Antimicrobial, "[8]", "")) %>%
+  mutate(Antimicrobial = str_replace(Antimicrobial, "[6]", "")) %>%
+  mutate(Antimicrobial = str_replace(Antimicrobial, "[..]", ""))%>%
+  mutate(Antimicrobial = str_replace(Antimicrobial, "[.]", ""))%>%
+  mutate(Antimicrobial = trimws(Antimicrobial)) %>%
+  clean_names()
+amr_malindi_sltd<-Amr_Malindi%>%select(ward, specimen_type_code) %>%mutate(Antimicrobial = trimws(specimen_type_code))%>%
+  mutate(
+    ward = recode(
+      ward,
+      "ANTENATAL WARD " = "Inpatient",
+      "com" = NULL,
+      "GENERAL WARD " = "Inpatient",
+      "icu"="Critical care",
+      "ICU"="Critical care",
+      "IN PATIENT"="Inpatient",
+      "int"=NULL,
+      "lab"="Outpatient",
+      "med"="Inpatient",
+      "NBU"="Inpatient",
+      "obg"="Outpatient",
+      "OUTPATIENT"="Outpatient",
+      "PAEDIATRICS WARD"="Inpatient",
+      "ped"="Outpatient",
+      "sur"="Inpatient",
+      "WARD 1 "="Inpatient",
+      "WARD 2"="Inpatient",
+      "WARD 3"="Inpatient",
+      "WARD 4"="Inpatient",
+      "WARD 5"="Inpatient",
+      "WARD 6"="Inpatient",
+      "WARD 7"="Inpatient",
+      "ANTENATAL WARD"="Inpatient",
+      "GENERAL WARD"="Inpatient",
+      "OP"="Outpatient",
+      "WARD 1"="Inpatient",
+      "OPD"="Inpatient",
+      "opd"="Inpatient"
+      
+      
+     
+    )
+  ) %>%
+  mutate(
+    specimen_type_code = recode(
+      specimen_type_code,
+      "ab" = "Abscess",
+      "ABSCESS" = "Abscess",
+      "Ascitic fluid" = "Fluids",
+      "FLUID" = "Fluids",
+      "pf"="Fluids",
+      "Pleural fluid"="Fluids",
+      "ur"="urine",
+      "ps"="Pus",
+      "PUS"="Pus",
+      "Pus swab"="Swabs",
+      "fl"="Fluids",
+      "Urethral Swab"="Swabs",
+      "WOUND SWAB"="Swabs",
+      "va"=NULL,
+      "ur"=NA,
+      "bl"=NULL,
+      "ga"=NULL,
+      "sw"=NULL,
+      "sp"=NULL,
+      "sb"=NULL,
+      "sf"=NULL,
+      "as"=NULL,
+      "st"=NULL,
+      "Cervical swab"="Swabs",
+      "at"=NULL,
+      "URINE"="urine",
+      "Urine"="urine",
+      "Swab"="Swabs",
+      "ASPIRATE"="Aspirates"
+      
+      
+    )
+  ) %>%filter(!is.na(specimen_type_code))%>%
+  group_by(ward, specimen_type_code) %>%
+  dplyr::summarise(freq = n()) %>%
+  ungroup() %>%
+  filter(!is.na(ward))%>%
+  mutate(county="Malindi")
+```
+## Malindi
+```{r,echo=FALSE}
+# amr_data[amr_data$county%in%"machakos",]aes(x = reorder(specimen_type_code,freq), y = freq,fill=ward)) +
+amr_data(amr_malindi_sltd(x = reorder(specimen_type_code,freq), y = freq,fill=ward))
+  geom_col( ) +  
+  labs(x = "Specimen", y = "Frequency") +
+  coord_flip()+
+  theme_minimal() +  
+  theme(axis.text.x = element_text(hjust = 1, vjust = 0.5), 
+        axis.title = element_text(size = 12, face = "bold"),  
+        axis.text = element_text(size = 10)) + scale_fill_manual(values=c("#e41a1c", "#377eb8", "#4daf4a"))+
+  scale_y_continuous(labels = scales::comma)
+```
+```{r,echo=FALSE}
+amr_malindi_sltd%>%
+  pivot_wider(id_cols = specimen_type_code, names_from = "ward", values_from = "freq") %>%
+  rename(`Specimen Type` = specimen_type_code) %>%
+  group_by(`Specimen Type`) %>%
+  mutate(Total=sum(Inpatient, Outpatient,`Critical care`, na.rm=T)) %>%
+  ungroup() %>%
+  
+  select(`Specimen Type`, Total, Inpatient, Outpatient,`Critical care`)%>%
+  kableExtra::kable()
+```
+```{r,include=FALSE}
+# antib_malindi <- Amr_Malindi %>%
+#   select(date_submitted_to_cdw, laboratory_id, ward, diagnosis_clinical_note, gender_m_f,specimen_type_code, age, x95, antimicrobial, ast_interpretation)%>% rename(bacteria=x95)%>%
+#   mutate(ast_interpretation =recode(ast_interpretation, 
+#                                             "R"="Re", 
+#                                             "S"="S", 
+#                                             "I"="I",
+#                                             "Sensitive"="S",
+#                                             "Intermediate"="I",
+#                                             "Resistant"="R"))%>%age = gsub(" years", "", age))%>%
+  antib_malindi <- Amr_Malindi %>%
+  select(date_submitted_to_cdw, laboratory_id, ward, diagnosis_clinical_note, gender_m_f, specimen_type_code, age, x95, antimicrobial, ast_interpretation) %>%
+  rename(bacteria = x95) %>%
+  mutate(ast_interpretation = recode(ast_interpretation, 
+                                     "R" = "Re", 
+                                     "S" = "S", 
+                                     "I" = "I",
+                                     "Sensitive" = "S",
+                                     "Intermediate" = "I",
+                                     "Resistant" = "R"),
+        age = gsub(" Years", "", age),
+         age = gsub("YEARS", "", age),
+        age = gsub("MONTHS", "", age),
+        age = gsub("Months", "", age))%>%
+        
+mutate(
+    ward = recode(
+      ward,
+      "ANTENATAL WARD " = "Inpatient",
+      "com" = NULL,
+      "GENERAL WARD " = "Inpatient",
+      "icu"="Critical care",
+      "ICU"="Critical care",
+      "IN PATIENT"="Inpatient",
+      "int"=NULL,
+      "lab"="Outpatient",
+      "med"="Inpatient",
+      "NBU"="Inpatient",
+      "obg"="Outpatient",
+      "OUTPATIENT"="Outpatient",
+      "PAEDIATRICS WARD"="Inpatient",
+      "ped"="Outpatient",
+      "sur"="Inpatient",
+      "WARD 1 "="Inpatient",
+      "WARD 2"="Inpatient",
+      "WARD 3"="Inpatient",
+      "WARD 4"="Inpatient",
+      "WARD 5"="Inpatient",
+      "WARD 6"="Inpatient",
+      "WARD 7"="Inpatient",
+      "ANTENATAL WARD"="Inpatient",
+      "GENERAL WARD"="Inpatient",
+      "OP"="Outpatient",
+      "WARD 1"="Inpatient",
+      "OPD"="Inpatient",
+      "opd"="Inpatient"
+      
+      
+     
+    )
+  )%>% mutate(
+    specimen_type_code = recode(
+      specimen_type_code,
+      "ab" = "Abscess",
+      "ABSCESS" = "Abscess",
+      "Ascitic fluid" = "Fluids",
+      "FLUID" = "Fluids",
+      "pf"="Fluids",
+      "Pleural fluid"="Fluids",
+      "ur"="urine",
+      "ps"="Pus",
+      "PUS"="Pus",
+      "Pus swab"="Swabs",
+      "fl"="Fluids",
+      "Urethral Swab"="Swabs",
+      "WOUND SWAB"="Swabs",
+      "va"=NULL,
+      "ur"=NA,
+      "bl"=NULL,
+      "ga"=NULL,
+      "sw"=NULL,
+      "sp"=NULL,
+      "sb"=NULL,
+      "sf"=NULL,
+      "as"=NULL,
+      "st"=NULL,
+      "Cervical swab"="Swabs",
+      "at"=NULL,
+      "URINE"="urine",
+      "Urine"="urine",
+      "Swab"="Swabs",
+      "ASPIRATE"="Aspirates"
+      
+      
+    )
+  )%>%filter(!is.na(specimen_type_code))%>%
+ # mutate(gender_m_f=as.factor(gender_m_f))
+ 
+  filter(ast_interpretation %in% c("I", "R", "S")) %>%
+  rename(patient_id = laboratory_id) %>%
+  pivot_wider(names_from = antimicrobial, values_from = ast_interpretation)
+
+antib_malindi <- apply(antib_malindi,2,as.character)
+write.csv(antib_malindi,"malindiclean.csv")
+
+#antib_malindi$bacteria <- as.mo(antib_malindi$bacteria, info = TRUE)
+antib_malindi<- antib_malindi %>%
+  mutate_at(vars(Ceftriaxone:Penicillin), as.sir)
+glimpse(antib_malindi)
+antib_malindi$date_submitted_to_cdw <- as.Date(antib_malindi$date_submitted_to_cdw)
+antib_malindi2<- antib_malindi %>%
+  mutate(first = first_isolate(info = TRUE))
+Malindi_antibiogram<- antib_malindi2 %>%
+pivot_longer(c(Ceftriaxone:Penicillin))%>%
+ filter(!is.na(value)) %>%
+   group_by(ward, bacteria, name, value,specimen_type_code)%>%
+   count()%>%
+   ungroup() %>%
+  group_by(ward, bacteria, name,specimen_type_code) %>%
+  mutate(total=sum(n)) %>%
+  ungroup() %>%
+   filter(total>29) %>%
+  mutate(susc=paste0(round(n/total*100), "%")) %>%
+  filter(value=="S") %>%
+  select(-n, -total, -value) %>%
+  pivot_wider(id_cols=c(ward,bacteria,specimen_type_code), names_from = name, values_from=susc)
+Malindi_antibiogram1<-antib_malindi2 %>%
+pivot_longer(c(Ceftriaxone:Penicillin))%>%
+ filter(!is.na(value)) %>%
+   group_by(ward, bacteria, name, value,specimen_type_code)%>%
+   count()%>%
+   ungroup() %>%
+  group_by(ward, bacteria, name,specimen_type_code) %>%
+  mutate(total=sum(n)) %>%
+  ungroup() %>%
+   filter(total>29) %>%
+   mutate(susc=round(n/total*100))%>%
+  #filter(value=="S") %>%
+  select(-n, -total)
+```
+```{r,echo=FALSE}
+ggplot(Malindi_antibiogram1)+geom_col(aes(name,susc, fill=value))+facet_grid(ward~bacteria+specimen_type_code)+coord_flip()+theme_bw()+labs(x="Antibiotics", y="Proportion (%)", fill="")
+```
+
+```{r,echo=FALSE}
+knitr::kable(Malindi_antibiogram)
+```
+```{r,include=FALSE}
+Amr_Bungoma<- Bungoma %>%
+  select(-contains("Zone")) %>%
+  mutate(across(everything(), as.character)) %>%
+  pivot_longer(cols = contains('Interpretation'), names_to = "Antimicrobial", values_to = "AST_interpretation", values_drop_na = TRUE) %>%
+  mutate(Antimicrobial = str_remove(Antimicrobial, "interpretation")) %>%
+  mutate(Antimicrobial = str_remove(Antimicrobial, "Interpretation")) %>%
+  mutate(Antimicrobial = str_replace(Antimicrobial, "[.]", "")) %>%
+  mutate(Antimicrobial = str_replace(Antimicrobial, "[4]", "")) %>%
+  mutate(Antimicrobial = str_replace(Antimicrobial, "[1]", "")) %>%
+  mutate(Antimicrobial = str_replace(Antimicrobial, "[7]", "")) %>%
+  mutate(Antimicrobial = str_replace(Antimicrobial, "[5]", "")) %>%
+  mutate(Antimicrobial = str_replace(Antimicrobial, "[9]", "")) %>%
+  mutate(Antimicrobial = str_replace(Antimicrobial, "[2]", "")) %>%
+  mutate(Antimicrobial = str_replace(Antimicrobial, "[3]", "")) %>%
+  mutate(Antimicrobial = str_replace(Antimicrobial, "[8]", "")) %>%
+  mutate(Antimicrobial = str_replace(Antimicrobial, "[6]", "")) %>%
+  mutate(Antimicrobial = str_replace(Antimicrobial, "[..]", ""))%>%
+  mutate(Antimicrobial = str_replace(Antimicrobial, "[.]", ""))%>%
+  mutate(Antimicrobial = trimws(Antimicrobial)) %>%
+  clean_names()
+amr_bungoma_sltd<-Amr_Bungoma%>%select(ward, specimen_type_code)%>%mutate(
+    ward = recode(
+      ward,
+      "cli" = "Outpatient",
+      "hos" = "Outpatient",
+      "med"="Inpatient",
+      "neo"="Inpatient",
+      "obg"="Inpatient",
+      "oth"="Inpatient",
+      "med"="Inpatient",
+      "ped"="Inpatient",
+      "psy"="Inpatient",
+      "sur"="Inpatient",
+      "icu"="Critical care"
+      )
+  ) %>%
+  mutate(
+    specimen_type_code = recode(
+      specimen_type_code,
+      "bl" = "Blood",
+      "ps" = "Pus",
+      "pas" = "Pus",
+      "st" = "Stool",
+      "ep"=NULL,
+      "sw"=NULL,
+      "ur"="Urine",
+      "urine"="Urine",
+      "at"=NULL,
+      "ue"=NULL
+      
+      )
+  )%>%filter(!is.na(specimen_type_code))%>%
+  group_by(ward, specimen_type_code) %>%
+  dplyr::summarise(freq = n()) %>%
+  ungroup() %>%
+  filter(!is.na(ward))%>%
+  mutate(county="Bungoma")
+```
+## Bungoma
+```{r,echo=FALSE}
+ggplot(amr_bungoma_sltd, aes(x = reorder(specimen_type_code,freq), y = freq,fill=ward)) +
+  geom_col( ) +  
+  labs(x = "Specimen", y = "Frequency") +
+  coord_flip()+
+  theme_minimal() +  
+  theme(axis.text.x = element_text(hjust = 1, vjust = 0.5), 
+        axis.title = element_text(size = 12, face = "bold"),  
+        axis.text = element_text(size = 10)) + scale_fill_manual(values=c("#e41a1c", "#377eb8", "#4daf4a"))+
+  scale_y_continuous(labels = scales::comma)
+```
+```{r,echo=FALSE}
+amr_bungoma_sltd%>%
+  pivot_wider(id_cols = specimen_type_code, names_from = "ward", values_from = "freq") %>%
+  rename(`Specimen Type` = specimen_type_code) %>%
+  group_by(`Specimen Type`) %>%
+  mutate(Total=sum(Inpatient,Outpatient,`Critical care`, na.rm=T)) %>%
+  ungroup() %>%
+  
+  select(`Specimen Type`, Total, Inpatient,Outpatient,`Critical care`)%>%
+  kableExtra::kable()
+```
+```{r,include=FALSE}
+antib_bungoma <- Amr_Bungoma %>%
+  select(date_submitted_to_cdw, laboratory_id, ward, diagnosis_clinical_note, gender_m_f, age, x95,specimen_type_code, antimicrobial, ast_interpretation)%>%rename(patient_id = laboratory_id)%>%rename(bacteria=x95)%>%mutate(
+    ward = recode(
+      ward,
+      "cli" = "Outpatient",
+      "hos" = "Outpatient",
+      "med"="Inpatient",
+      "neo"="Inpatient",
+      "obg"="Inpatient",
+      "oth"="Inpatient",
+      "med"="Inpatient",
+      "ped"="Inpatient",
+      "psy"="Inpatient",
+      "sur"="Inpatient",
+      "icu"="Critical care"
+      )
+  )%>%mutate(
+    specimen_type_code = recode(
+      specimen_type_code,
+      "bl" = "Blood",
+      "ps" = "Pus",
+      "pas" = "Pus",
+      "st" = "Stool",
+      "ep"=NULL,
+      "sw"=NULL,
+      "ur"="Urine",
+      "urine"="Urine",
+      "at"=NULL,
+      "ue"=NULL
+      
+      ))%>%mutate(ast_interpretation =recode(ast_interpretation, 
+                
+                                            "Sensitive"="S",
+                                            "Intermediate"="I",
+                                            "Resistant"="R"),
+                  
+        age = gsub(" Years", "", age),
+         age = gsub("YEARS", "", age),
+        age = gsub("MONTHS", "", age),
+        age = gsub("Days", "", age)) %>%pivot_wider(names_from = antimicrobial, values_from = ast_interpretation)
+write.csv(antib_bungoma,"bungomaclean.csv")
+#antib_bungoma$bacteria <- as.mo(antib_bungoma$bacteria, info = TRUE)
+antib_bungoma<- antib_bungoma %>%
+  mutate_at(vars(Clindamycin:Ertapenem), as.sir)
+antib_bungoma$date_submitted_to_cdw <- as.Date(antib_bungoma$date_submitted_to_cdw, format = "%Y-%m-%d")
+antib_bungoma2<- antib_bungoma %>%
+  mutate(first = first_isolate(info = TRUE))
+Bungoma_antibiogram<- antib_bungoma2 %>%
+pivot_longer(c(Clindamycin:Ertapenem))%>%
+ filter(!is.na(value)) %>%
+   group_by(ward, bacteria, name, value,specimen_type_code)%>%
+   count()%>%
+   ungroup() %>%
+  group_by(ward, bacteria, name,specimen_type_code) %>%
+  mutate(total=sum(n)) %>%
+  ungroup() %>%
+   filter(total>29) %>%
+  mutate(susc=paste0(round(n/total*100), "%")) %>%
+  filter(value=="S") %>%
+  select(-n, -total, -value) %>%
+  pivot_wider(id_cols=c(ward,bacteria,specimen_type_code), names_from = name, values_from=susc)
+
+  
+
+Bungoma_antibiogram1<- antib_bungoma2 %>%
+pivot_longer(c(Clindamycin:Ertapenem))%>%
+ filter(!is.na(value)) %>%
+   group_by(ward, bacteria, name, value,specimen_type_code)%>%
+   count()%>%
+   ungroup() %>%
+  group_by(ward, bacteria, name,specimen_type_code) %>%
+  mutate(total=sum(n)) %>%
+  ungroup() %>%
+   filter(total>29) %>%
+  mutate(susc=round(n/total*100)) %>%
+ # filter(value=="S") %>%
+  select(-n, -total)%>%
+  mutate(bacteria=recode(bacteria, "B_ESCHR_COLI"="Escherichia coli",
+                                  "B_STPHY_AURS"="Staphylococcus aureus"))%>%
+  mutate(value1=recode(value, "S"="Susceptible", "I"="Intermediate", "R"="Resistant"))
+  
+```
+
+```{r,echo=FALSE}
+ggplot(Bungoma_antibiogram1)+geom_col(aes(name,susc, fill=value1))+facet_grid(ward~bacteria+specimen_type_code)+coord_flip()+theme_bw()+labs(x="Antibiotics", y="Proportion (%)", fill="")
+```
+
+```{r,echo=FALSE}
+knitr::kable(Bungoma_antibiogram)
+```
+```{r,include=FALSE}
+amr_Makueni <-Makueni%>%
+  select(-contains("Zone")) %>%
+  pivot_longer(contains('Interpretation'), names_to="Antimicrobial", values_to = "AST_interpretation",values_drop_na = TRUE)%>%
+
+mutate(Antimicrobial=str_remove(Antimicrobial,"interpretation")) %>%
+  mutate(Antimicrobial=str_remove(Antimicrobial,"Interpretation")) %>%
+mutate(Antimicrobial=str_replace(Antimicrobial,"[.]", ""))%>%
+  mutate(Antimicrobial=str_replace(Antimicrobial,"[4]", "")) %>%
+  mutate(Antimicrobial=str_replace(Antimicrobial,"[1]", "")) %>%
+  mutate(Antimicrobial=str_replace(Antimicrobial,"[.]", "")) %>%
+  mutate(Antimicrobial=str_replace(Antimicrobial,"[.]", "")) %>%
+  mutate(Antimicrobial=str_replace(Antimicrobial,"[7]", "")) %>%
+  mutate(Antimicrobial=str_replace(Antimicrobial,"[5]", "")) %>%
+    mutate(Antimicrobial=str_replace(Antimicrobial,"[9]", "")) %>%
+  mutate(Antimicrobial=str_replace(Antimicrobial,"[2]", "")) %>%
+  mutate(Antimicrobial=str_replace(Antimicrobial,"[3]", ""))%>%
+  mutate(Antimicrobial=str_replace(Antimicrobial,"[8]", ""))%>%
+  mutate(Antimicrobial=str_replace(Antimicrobial,"[6]", ""))%>%
+  mutate(Antimicrobial=trimws(Antimicrobial))%>%
+  clean_names()
+  amr_makueni_sltd<-amr_Makueni%>%select(ward, specimen_type_code) %>%
+  mutate(
+    ward = recode(
+      ward,
+      "mch" = "Outpatient",
+      "med" = "Inpatient",
+      "opd" = "Outpatient",
+      "ped"="Inpatient",
+      "sur"="Inpatient"
+      
+     
+    )
+  ) %>%
+  mutate(
+    specimen_type_code = recode(
+      specimen_type_code,
+      "pus" = "Pus",
+      "ps" = "Pus",
+      "urin" = "urine",
+      "sp" = "sputum",
+      "ti"="tissue",
+      "tiss"="tissue",
+      "ur"="urine",
+      "st"=" stool",
+      "pleural fluid"="Fluids",
+      "peritonium flui"="Fluids",
+      "fl"="Fluids",
+      "ab"=NULL,
+      "as"=NULL,
+      "at"=NULL,
+      "bx"=NULL,
+      "sb"=NULL,
+      "pd"=NULL
+      
+    )
+  ) %>%filter(!is.na(specimen_type_code))%>%
+  group_by(ward, specimen_type_code) %>%
+  dplyr::summarise(freq = n()) %>%
+  ungroup() %>%
+  filter(!is.na(ward))
+```
+## Makueni
+```{r,echo=FALSE}
+ggplot(amr_makueni_sltd, aes(x = reorder(specimen_type_code,freq), y = freq,fill=ward)) +
+  geom_col( ) +  
+  labs(x = "Specimen", y = "Frequency") +
+  coord_flip()+
+  theme_minimal() +  
+  theme(axis.text.x = element_text(hjust = 1, vjust = 0.5), 
+        axis.title = element_text(size = 12, face = "bold"),  
+        axis.text = element_text(size = 10)) + scale_fill_manual(values=c( "#377eb8", "#4daf4a"))+
+  scale_y_continuous(labels = scales::comma)
+```
+```{r,echo=FALSE}
+amr_makueni_sltd%>%
+  pivot_wider(id_cols = specimen_type_code, names_from = "ward", values_from = "freq") %>%
+  rename(`Specimen Type` = specimen_type_code) %>%
+  group_by(`Specimen Type`) %>%
+  mutate(Total=sum(Inpatient, Outpatient, na.rm=T)) %>%
+  ungroup() %>%
+  
+  select(`Specimen Type`, Total, Inpatient, Outpatient)%>%
+  kableExtra::kable()
+
+```
+#### Didn't have enough isolates for an antibiogram
+```{r,include=FALSE}
+
+```
+
